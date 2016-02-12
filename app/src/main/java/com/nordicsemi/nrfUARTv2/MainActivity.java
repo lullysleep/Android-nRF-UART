@@ -26,6 +26,10 @@ package com.nordicsemi.nrfUARTv2;
 
 
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.util.Date;
@@ -51,6 +55,7 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -86,6 +91,13 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
     private ArrayAdapter<String> listAdapter;
     private Button btnConnectDisconnect,btnSend;
     private EditText edtMessage;
+
+    private String filename = "LoggingTest.csv";
+   // private FileOutputStream file_stream;
+    private File file;
+    private FileWriter file_writer;
+    //private OutputStreamWriter osw;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,7 +117,14 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
         edtMessage = (EditText) findViewById(R.id.sendText);
         service_init();
 
-     
+        try{
+            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
+            file_writer = new FileWriter(file);
+            //file_writer.write("start");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
        
         // Handle Disconnect & Connect button
         btnConnectDisconnect.setOnClickListener(new View.OnClickListener() {
@@ -118,7 +137,8 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                 }
                 else {
                 	if (btnConnectDisconnect.getText().equals("Connect")){
-                		
+
+
                 		//Connect button pressed, open DeviceListActivity class, with popup windows that scan for devices
                 		
             			Intent newIntent = new Intent(MainActivity.this, DeviceListActivity.class);
@@ -225,6 +245,7 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                              listAdapter.add("["+currentDateTimeString+"] Disconnected to: "+ mDevice.getName());
                              mState = UART_PROFILE_DISCONNECTED;
                              mService.close();
+
                             //setUiState();
                          
                      }
@@ -245,9 +266,11 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                          try {
                          	String text = new String(txValue, "UTF-8");
                          	String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-                        	 	listAdapter.add("["+currentDateTimeString+"] RX: "+text);
-                        	 	messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
-                        	
+                             listAdapter.add("[" + currentDateTimeString + "] RX: " + text);
+                             messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
+
+
+                             file_writer.write(text+"\n");
                          } catch (Exception e) {
                              Log.e(TAG, e.toString());
                          }
@@ -291,9 +314,17 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
         
         try {
         	LocalBroadcastManager.getInstance(this).unregisterReceiver(UARTStatusChangeReceiver);
+
         } catch (Exception ignore) {
             Log.e(TAG, ignore.toString());
-        } 
+        }
+
+        try {
+            file_writer.flush();
+            file_writer.close();
+        }catch (Exception e) {
+
+        }
         unbindService(mServiceConnection);
         mService.stopSelf();
         mService= null;
