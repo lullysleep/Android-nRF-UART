@@ -31,7 +31,9 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 
@@ -260,17 +262,34 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
           //*********************//
             if (action.equals(UartService.ACTION_DATA_AVAILABLE)) {
               
-                 final byte[] txValue = intent.getByteArrayExtra(UartService.EXTRA_DATA);
+                final byte[] txValue = intent.getByteArrayExtra(UartService.EXTRA_DATA);
+                ByteBuffer bb;
+                final long ticks, ticks2;
+                final short x, y, z, x2,y2,z2;
+
+                bb = ByteBuffer.wrap(txValue);
+                ticks = (long)bb.getInt(0); // cheap way of getting an unsigned 32-bit int
+                x = bb.getShort(4);
+                y = bb.getShort(6);
+                z = bb.getShort(8);
+                ticks2 = (long)bb.getInt(10); // cheap way of getting an unsigned 32-bit int
+                x2 = bb.getShort(14);
+                y2 = bb.getShort(16);
+                z2 = bb.getShort(18);
+
+
                  runOnUiThread(new Runnable() {
                      public void run() {
                          try {
-                         	String text = new String(txValue, "UTF-8");
+                         	//String text = new String(txValue, "UTF-8");
+
+                             String text= String.format("%d, %d, %d, %d", ticks, (int)x, (int)y, (int)z);
                          	String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                              listAdapter.add("[" + currentDateTimeString + "] RX: " + text);
                              messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
-
-
-                             file_writer.write(text+"\n");
+                             file_writer.write(text + "\n");
+                             text= String.format("%d, %d, %d, %d", ticks2, (int)x2, (int)y2, (int)z2);
+                             file_writer.write(text + "\n");
                          } catch (Exception e) {
                              Log.e(TAG, e.toString());
                          }
