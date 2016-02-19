@@ -269,11 +269,11 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
 
 
                 bb = ByteBuffer.wrap(txValue);
-                ticks = (long)bb.getInt(0); // cheap way of getting an unsigned 32-bit int
+                ticks = Long.parseLong(Integer.toBinaryString(bb.getInt(0))); // cheap way of getting an unsigned 32-bit int
                 x = bb.getShort(4);
                 y = bb.getShort(6);
                 z = bb.getShort(8);
-                ticks2 = (long)bb.getInt(10); // cheap way of getting an unsigned 32-bit int
+                ticks2 = Long.parseLong(Integer.toBinaryString(bb.getInt(10))); // cheap way of getting an unsigned 32-bit int
                 x2 = bb.getShort(14);
                 y2 = bb.getShort(16);
                 z2 = bb.getShort(18);
@@ -285,7 +285,7 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                          try {
                          	//String text = new String(txValue, "UTF-8");
 
-                             String text= String.format("%d, %d, %d, %d", ticks, (int)x, (int)y, (int)z);
+                             String text= String.format( "%d, %d, %d, %d", ticks, (int)x, (int)y, (int)z);
                          	String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
                              millis = System.currentTimeMillis();
                              if  ((millis - last_millis) > 1000) {
@@ -294,7 +294,7 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                                  messageListView.smoothScrollToPosition(listAdapter.getCount() - 1);
                              }
                              file_writer.write(text + "\n");
-                             text= String.format("%d, %d, %d, %d", ticks2, (int)x2, (int)y2, (int)z2);
+                             text= String.format("%d, %d, %d, %d",ticks2, (int)x2, (int)y2, (int)z2);
                              file_writer.write(text + "\n");
                          } catch (Exception e) {
                              Log.e(TAG, e.toString());
