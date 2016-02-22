@@ -34,7 +34,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.text.DateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 
 import com.nordicsemi.nrfUARTv2.UartService;
@@ -118,14 +120,6 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
         btnSend=(Button) findViewById(R.id.sendButton);
         edtMessage = (EditText) findViewById(R.id.sendText);
         service_init();
-
-        try{
-            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
-            file_writer = new FileWriter(file);
-            //file_writer.write("start");
-        }catch (Exception e){
-            e.printStackTrace();
-        }
 
        
         // Handle Disconnect & Connect button
@@ -232,6 +226,15 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                              mState = UART_PROFILE_CONNECTED;
                      }
             	 });
+                try{
+                    //Calendar c = new GregorianCalendar();
+                    filename = DateFormat.getTimeInstance().format(new Date()) + ".csv";
+                    file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename);
+                    file_writer = new FileWriter(file);
+                    //file_writer.write("start");
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
            
           //*********************//
@@ -252,6 +255,12 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
                          
                      }
                  });
+                try {
+                    file_writer.flush();
+                    file_writer.close();
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             
           
@@ -261,19 +270,20 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
             }
           //*********************//
             if (action.equals(UartService.ACTION_DATA_AVAILABLE)) {
-              
+                //final byte[] testvals = {(byte)0xFF, (byte)0xFF, (byte)0xFF, (byte)0x01};
                 final byte[] txValue = intent.getByteArrayExtra(UartService.EXTRA_DATA);
-                ByteBuffer bb;
+                ByteBuffer bb, bbtest;
                 final long ticks, ticks2;
                 final short x, y, z, x2,y2,z2;
 
 
                 bb = ByteBuffer.wrap(txValue);
-                ticks = Long.parseLong(Integer.toBinaryString(bb.getInt(0))); // cheap way of getting an unsigned 32-bit int
+                //bbtest = ByteBuffer.wrap(testvals);
+                ticks = Long.parseLong(Integer.toBinaryString(bb.getInt(0)),2); // cheap way of getting an unsigned 32-bit int
                 x = bb.getShort(4);
                 y = bb.getShort(6);
                 z = bb.getShort(8);
-                ticks2 = Long.parseLong(Integer.toBinaryString(bb.getInt(10))); // cheap way of getting an unsigned 32-bit int
+                ticks2 = Long.parseLong(Integer.toBinaryString(bb.getInt(10)),2); // cheap way of getting an unsigned 32-bit int
                 x2 = bb.getShort(14);
                 y2 = bb.getShort(16);
                 z2 = bb.getShort(18);
@@ -344,12 +354,6 @@ public class MainActivity extends Activity implements RadioGroup.OnCheckedChange
             Log.e(TAG, ignore.toString());
         }
 
-        try {
-            file_writer.flush();
-            file_writer.close();
-        }catch (Exception e) {
-
-        }
         unbindService(mServiceConnection);
         mService.stopSelf();
         mService= null;
